@@ -1,7 +1,20 @@
+let screen = "home";
+let selectedLevel = null;
+
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(800, 500);
+  textAlign(CENTER, CENTER);
 }
 
 function draw() {
-  background(0, 0, 255);
+  background(30);
+
+  if (screen === "home") drawHome();
+  if (screen === "levels") drawLevels();
+  if (screen === "instructions") drawInstructions();
+  if (screen === "game") runLevel();
+}
+
+function mousePressed() {
+  handleMouse();
 }
