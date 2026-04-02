@@ -3,21 +3,21 @@
 // --------------------------------------------------
 
 function getInstructionsBackButton() {
-  return { x: width / 2, y: height * 0.78, w: 220, h: 52 };
+  return { x: width / 2, y: height * 0.8, w: 230, h: 54 };
 }
 
 function drawInstructions() {
-  background(25, 30, 40);
+  drawScreenBackdrop(level1BG, [10, 14, 27], [21, 30, 48], 195);
 
   const backButton = getInstructionsBackButton();
 
   drawCenteredPanel(
     "How to Play",
-    "Each level begins with its own centered briefing.\n\n" +
-      "Level 1: use visual clues and Magnify.\n" +
-      "Level 2: question suspects and compare statements.\n" +
-      "Level 3: combine notebook notes with one forensic clue.\n\n" +
-      "Use Convict only when you are sure.",
+    "Each level begins with its own briefing.\n\n" +
+      "Level 1: inspect visual clues and use Magnify.\n" +
+      "Level 2: question suspects and compare statements on the board.\n" +
+      "Level 3: combine notebook notes with one forensic check.\n\n" +
+      "Use Convict only when the evidence points to one suspect.",
     "Back",
     backButton,
   );

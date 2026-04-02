@@ -1,5 +1,5 @@
 function getFailButtons() {
-  const row = getButtonRow(2, height * 0.72, 180, 54, 30);
+  const row = getButtonRow(2, height * 0.73, 190, 56, 28);
 
   return {
     home: row[0],
@@ -15,75 +15,44 @@ function getFailedLevelLabel() {
 }
 
 function drawFail() {
-  background(35, 20, 20);
+  drawScreenBackdrop(null, [26, 10, 14], [56, 18, 24], 0);
 
   const buttons = getFailButtons();
-  const panelW = min(width * 0.72, 700);
-  const panelH = min(height * 0.56, 380);
+  const panelW = min(width * 0.72, 720);
+  const panelH = min(height * 0.58, 400);
   const panelX = width / 2;
   const panelY = height / 2;
 
-  push();
-  fill(0, 170);
-  noStroke();
-  rect(0, 0, width, height);
-  pop();
+  drawModalOverlay(120);
+  drawGlassPanel(panelX, panelY, panelW, panelH, UI_COLORS.danger, 28);
+  drawBadge("CASE LOST", panelX, panelY - panelH * 0.35, 120, UI_COLORS.danger);
 
-  push();
-  rectMode(CENTER);
-  stroke(255);
-  strokeWeight(2);
-  fill(52, 24, 24, 245);
-  rect(panelX, panelY, panelW, panelH, 18);
-  pop();
-
-  // centered text block
   push();
   fill(255);
   textAlign(CENTER, CENTER);
 
-  const titleSize = min(width, height) * 0.05;
-  const subSize = min(width, height) * 0.026;
-  const bodySize = min(width, height) * 0.022;
-  const lineGap = 28;
+  textSize(min(width, height) * 0.055);
+  text("Case Failed", panelX, panelY - panelH * 0.16);
 
-  const titleText = "Case Failed";
-  const subText = getFailedLevelLabel();
-  const bodyLines = [
-    failedMessage,
-    "",
-    "Choose Retry to replay this level",
-    "or Home to return to the main menu.",
-  ];
+  fill(255, 218, 218);
+  textSize(min(width, height) * 0.026);
+  text(getFailedLevelLabel(), panelX, panelY - panelH * 0.04);
 
-  const titleH = 40;
-  const subH = 26;
-  const bodyH = bodyLines.length * lineGap;
-  const gap1 = 18;
-  const gap2 = 22;
-
-  const totalBlockH = titleH + gap1 + subH + gap2 + bodyH;
-  let startY = panelY - totalBlockH / 2;
-
-  textSize(titleSize);
-  text(titleText, panelX, startY + titleH / 2);
-
-  startY += titleH + gap1;
-
-  textSize(subSize);
-  text(subText, panelX, startY + subH / 2);
-
-  startY += subH + gap2;
-
-  textSize(bodySize);
-  for (let i = 0; i < bodyLines.length; i++) {
-    text(bodyLines[i], panelX, startY + i * lineGap);
-  }
-
+  fill(UI_COLORS.mutedInk[0], UI_COLORS.mutedInk[1], UI_COLORS.mutedInk[2]);
+  textSize(min(width, height) * 0.022);
+  textLeading(30);
+  text(
+    failedMessage +
+      "\n\nChoose Retry to replay this level or Home to return to the main menu.",
+    panelX - panelW * 0.32,
+    panelY + panelH * 0.02,
+    panelW * 0.64,
+    panelH * 0.32,
+  );
   pop();
 
-  drawButton(buttons.home, "Home");
-  drawButton(buttons.retry, "Retry");
+  drawButton(buttons.home, "Home", [90, 110, 145]);
+  drawButton(buttons.retry, "Retry", UI_COLORS.danger);
 }
 
 function failMousePressed() {

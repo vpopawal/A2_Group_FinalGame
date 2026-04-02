@@ -1,17 +1,5 @@
 // --------------------------------------------------
 // Level 3 - Final case
-// Keeps earlier features:
-// - inspect
-// - magnify
-// - convict
-// - ask question
-// - evidence board
-//
-// Adds:
-// - notebook
-// - forensics
-//
-// Uses one sprite sheet with 5 suspect portraits
 // --------------------------------------------------
 
 let suspects3 = [
@@ -89,11 +77,11 @@ let forensicMessage3 = "";
 let questioned3 = [false, false, false, false, false];
 
 function getLevel3Buttons() {
-  const lineupRow = getButtonRow(3, height * 0.86, 150, 50, 22);
+  const lineupRow = getButtonRow(3, height * 0.9, 150, 50, 22);
   const inspectRow = getButtonRow(3, height * 0.86, 150, 50, 22);
 
   return {
-    begin: { x: width / 2, y: height * 0.74, w: 220, h: 52 },
+    begin: { x: width / 2, y: height * 0.82, w: 220, h: 52 },
 
     board: lineupRow[0],
     forensics: lineupRow[1],
@@ -115,45 +103,34 @@ function isMouseOverLevel3Suspect(x, y, w, h) {
   );
 }
 
-function drawLevel3Portrait(x, y, suspect, drawW, drawH) {
+function drawLevel3Portrait(x, y, index, drawW, drawH) {
   const hovered = isMouseOverLevel3Suspect(x, y, drawW, drawH);
+  const scale = hovered ? 1.04 : 1;
+
+  drawPortraitFrame(
+    x,
+    y,
+    drawW * scale,
+    drawH * 0.97 * scale,
+    hovered,
+    convictMode3,
+  );
 
   push();
   imageMode(CENTER);
-  rectMode(CENTER);
-
-  noFill();
-  strokeWeight(4);
-
-  if (convictMode3) stroke(255, 110, 110);
-  else if (hovered) stroke(120, 210, 255);
-  else stroke(255);
-
-  rect(x, y, drawW + 10, drawH + 10, 14);
-
-  if (level3Sprite && level3Sprite.width > 0) {
-    const srcW = level3Sprite.width / 5;
-    const srcH = level3Sprite.height;
-    const sx = suspect.spriteIndex * srcW;
-    const sy = 0;
-
-    image(level3Sprite, x, y, drawW, drawH, sx, sy, srcW, srcH);
+  if (suspectImgs3[index]) {
+    image(suspectImgs3[index], x, y, drawW * scale, drawH * scale);
   } else {
-    fill(160);
+    fill(190);
     noStroke();
-    rect(x, y, drawW, drawH, 12);
+    rectMode(CENTER);
+    rect(x, y, drawW, drawH, 14);
   }
-
-  fill(255);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  textSize(max(12, drawW * 0.12));
-  text(suspect.name, x, y + drawH * 0.62);
   pop();
 }
 
 function drawLevel3() {
-  background(38, 48, 60);
+  drawScreenBackdrop(level3BG, [7, 12, 24], [23, 32, 52], 175);
 
   if (level3Stage === "intro") drawLevel3Intro();
   else if (level3Mode === "lineup") drawLevel3Lineup();
@@ -163,7 +140,7 @@ function drawLevel3() {
   if (showForensics3) drawForensicsPanel3();
   if (showBoard3) drawBoard3();
 
-  drawFooterMessage(message3);
+  drawFooterMessage(message3, convictMode3 ? "warning" : "info");
 }
 
 function drawLevel3Intro() {
@@ -180,216 +157,215 @@ function drawLevel3Intro() {
   );
 }
 
-function drawLevel3Lineup() {
-  const buttons = getLevel3Buttons();
-  const positions = getLineupPositions(suspects3.length);
-
-  drawCaseHeader(
-    "Level 3: Murder Case",
-    convictMode3
-      ? "Convict mode: click the killer."
-      : "All previous tools stay active here, plus notebook and forensics.",
-  );
-
-  push();
-  fill(255);
-  textAlign(CENTER, CENTER);
-  textSize(min(width, height) * 0.022);
-  text(`Forensics left: ${forensicsLeft3}`, width / 2, height * 0.22);
-  pop();
-
-  for (let i = 0; i < suspects3.length; i++) {
-    drawLevel3Portrait(positions[i].x, positions[i].y, suspects3[i], 100, 160);
-  }
-
-  drawButton(buttons.board, "Board");
-  drawButton(buttons.forensics, "Forensics");
-  drawButton(buttons.convict, convictMode3 ? "Cancel" : "Convict");
-}
-
 function drawLevel3Inspect() {
   const buttons = getLevel3Buttons();
   const suspect = suspects3[selected3];
 
-  drawCaseHeader(
+  drawInspectLayout(
     "Inspecting " + suspect.name,
-    "Magnify, interview, and notebook all work together here.",
+    "Magnify, interview, notebook, and forensics all work together here.",
+    (x, y, w, h) => {
+      if (suspectFaces3[selected3]) {
+        image(suspectFaces3[selected3], x, y, w, h);
+      } else {
+        noStroke();
+        fill(190);
+        rectMode(CENTER);
+        rect(x, y, w, h, 14);
+      }
+    },
+    [
+      {
+        label: "Visual read",
+        value: suspect.appearance,
+      },
+      {
+        label: "Magnify",
+        value: magnifyMessage3 || "Use Magnify to inspect for trace residue.",
+        h: 78,
+      },
+      {
+        label: questioned3[selected3]
+          ? "Recorded interview"
+          : "Interview suspect",
+        value:
+          askMessage3 ||
+          "Interview this suspect to add their timeline to the evidence board.",
+        h: 96,
+      },
+    ],
+    UI_COLORS.success,
   );
 
-  push();
-  imageMode(CENTER);
-  rectMode(CENTER);
+  drawButton(buttons.back, "Back", [83, 103, 139]);
+  drawButton(buttons.magnify, "Magnify", UI_COLORS.warning);
+  drawButton(
+    buttons.ask,
+    questioned3[selected3] ? "Asked" : "Interview",
+    UI_COLORS.accentStrong,
+  );
+  drawButton(buttons.notebook, "Notebook", UI_COLORS.success);
+}
 
-  noFill();
-  stroke(255);
-  strokeWeight(4);
-  rect(width / 2, height * 0.32, 250, 280, 16);
+function drawLevel3Lineup() {
+  const buttons = getLevel3Buttons();
+  const positions = getLineupPositions(suspects3.length);
+  const imgW = min(width * 0.12, 160);
+  const imgH = min(height * 0.44, 390);
 
-  if (level3Sprite && level3Sprite.width > 0) {
-    const srcW = level3Sprite.width / 5;
-    const srcH = level3Sprite.height;
-    const sx = suspect.spriteIndex * srcW;
-    const sy = 0;
-
-    image(level3Sprite, width / 2, height * 0.32, 230, 260, sx, sy, srcW, srcH);
-  } else {
-    fill(210);
-    noStroke();
-    rect(width / 2, height * 0.32, 230, 260, 12);
-  }
-
-  fill(255);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  textSize(min(width, height) * 0.022);
-
-  text(
-    "Visual read: " + suspect.appearance,
-    width / 2 - width * 0.3,
-    height * 0.5,
-    width * 0.6,
-    60,
+  drawCaseHeader(
+    "Level 3: Murder Case",
+    convictMode3
+      ? "Convict mode is active. Select the killer."
+      : "Use every tool: inspect, board, notebook, and one forensic check.",
   );
 
-  if (magnifyMessage3) {
-    text(
-      "Magnify: " + magnifyMessage3,
-      width / 2 - width * 0.3,
-      height * 0.6,
-      width * 0.6,
-      70,
+  drawLineupFloor();
+  drawInfoPill(
+    `Forensics left: ${forensicsLeft3}`,
+    width / 2,
+    height * 0.2,
+    220,
+    UI_COLORS.success,
+  );
+
+  for (let i = 0; i < suspects3.length; i++) {
+    drawLevel3Portrait(positions[i].x, positions[i].y, i, imgW, imgH);
+
+    suspects3[i].hitbox = {
+      x: positions[i].x,
+      y: positions[i].y,
+      w: imgW,
+      h: imgH,
+    };
+
+    drawSuspectNameTag(
+      positions[i].x,
+      positions[i].y + imgH * 0.58,
+      suspects3[i].name,
+      questioned3[i],
     );
   }
 
-  if (askMessage3) {
-    text(
-      "Interview: " + askMessage3,
-      width / 2 - width * 0.3,
-      height * 0.72,
-      width * 0.6,
-      85,
-    );
-  }
-
-  pop();
-
-  drawButton(buttons.back, "Back");
-  drawButton(buttons.magnify, "Magnify");
-  drawButton(buttons.ask, questioned3[selected3] ? "Asked" : "Interview");
-  drawButton(buttons.notebook, "Notebook");
+  drawButton(buttons.board, "Board", [96, 124, 181]);
+  drawButton(buttons.forensics, "Forensics", UI_COLORS.success);
+  drawButton(
+    buttons.convict,
+    convictMode3 ? "Cancel Convict" : "Convict",
+    convictMode3 ? UI_COLORS.danger : UI_COLORS.accentStrong,
+  );
 }
 
 function drawNotebook3() {
+  drawModalOverlay(138);
+
+  const panelW = min(width * 0.72, 700);
+  const panelH = min(height * 0.52, 380);
+  drawGlassPanel(width / 2, height / 2, panelW, panelH, UI_COLORS.warning, 26);
+  drawBadge(
+    "NOTEBOOK",
+    width / 2,
+    height / 2 - panelH * 0.33,
+    120,
+    UI_COLORS.warning,
+  );
+
   push();
-  fill(0, 180);
-  noStroke();
-  rect(0, 0, width, height);
+  textAlign(LEFT, TOP);
+  fill(255);
+  textSize(min(width, height) * 0.024);
+  text("Field note", width / 2 - panelW * 0.36, height / 2 - panelH * 0.15);
 
-  rectMode(CENTER);
-  fill(248, 245, 230);
-  stroke(255);
-  strokeWeight(2);
-
-  const panelW = min(width * 0.72, 680);
-  const panelH = min(height * 0.52, 360);
-  rect(width / 2, height / 2, panelW, panelH, 16);
-
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-
-  textSize(min(width, height) * 0.034);
-  text("Notebook", width / 2, height / 2 - panelH * 0.32);
-
-  textSize(min(width, height) * 0.023);
-  textLeading(28);
+  fill(UI_COLORS.mutedInk[0], UI_COLORS.mutedInk[1], UI_COLORS.mutedInk[2]);
+  textSize(min(width, height) * 0.022);
+  textLeading(30);
   text(
     suspects3[selected3].notebook,
-    width / 2 - panelW * 0.35,
-    height / 2 - panelH * 0.08,
-    panelW * 0.7,
+    width / 2 - panelW * 0.36,
+    height / 2 - panelH * 0.03,
+    panelW * 0.72,
     panelH * 0.34,
   );
 
-  textSize(min(width, height) * 0.018);
-  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.32);
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.34);
   pop();
 }
 
 function drawForensicsPanel3() {
-  push();
-  fill(0, 180);
-  noStroke();
-  rect(0, 0, width, height);
+  drawModalOverlay(138);
 
-  rectMode(CENTER);
-  fill(240);
-  stroke(255);
-  strokeWeight(2);
-
-  const panelW = min(width * 0.74, 700);
-  const panelH = min(height * 0.44, 300);
-  rect(width / 2, height / 2, panelW, panelH, 16);
-
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-
-  textSize(min(width, height) * 0.034);
-  text("Forensics", width / 2, height / 2 - panelH * 0.28);
-
-  textSize(min(width, height) * 0.023);
-  textLeading(28);
-  text(
-    forensicMessage3,
-    width / 2 - panelW * 0.35,
-    height / 2 - panelH * 0.02,
-    panelW * 0.7,
-    panelH * 0.3,
+  const panelW = min(width * 0.74, 720);
+  const panelH = min(height * 0.46, 320);
+  drawGlassPanel(width / 2, height / 2, panelW, panelH, UI_COLORS.success, 26);
+  drawBadge(
+    "FORENSICS",
+    width / 2,
+    height / 2 - panelH * 0.3,
+    130,
+    UI_COLORS.success,
   );
 
-  textSize(min(width, height) * 0.018);
-  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.28);
+  push();
+  textAlign(LEFT, TOP);
+  fill(255);
+  textSize(min(width, height) * 0.024);
+  text("Lab result", width / 2 - panelW * 0.36, height / 2 - panelH * 0.1);
+
+  fill(UI_COLORS.mutedInk[0], UI_COLORS.mutedInk[1], UI_COLORS.mutedInk[2]);
+  textSize(min(width, height) * 0.022);
+  textLeading(30);
+  text(
+    forensicMessage3,
+    width / 2 - panelW * 0.36,
+    height / 2,
+    panelW * 0.72,
+    panelH * 0.22,
+  );
+
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.3);
   pop();
 }
 
 function drawBoard3() {
+  drawModalOverlay(138);
+
+  const panelW = min(width * 0.82, 860);
+  const panelH = min(height * 0.78, 560);
+  drawGlassPanel(width / 2, height / 2, panelW, panelH, UI_COLORS.accent, 26);
+  drawBadge(
+    "EVIDENCE BOARD",
+    width / 2,
+    height / 2 - panelH * 0.39,
+    155,
+    UI_COLORS.accent,
+  );
+
   push();
-  fill(0, 180);
-  noStroke();
-  rect(0, 0, width, height);
-
-  rectMode(CENTER);
-  fill(245);
-  stroke(255);
-  strokeWeight(2);
-
-  const panelW = min(width * 0.78, 760);
-  const panelH = min(height * 0.75, 520);
-  rect(width / 2, height / 2, panelW, panelH, 16);
-
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-
-  textSize(min(width, height) * 0.035);
-  text("Evidence Board", width / 2, height / 2 - panelH * 0.4);
-
-  textSize(min(width, height) * 0.02);
-  textLeading(24);
-
-  const startY = height / 2 - panelH * 0.24;
+  textAlign(LEFT, TOP);
+  const startX = width / 2 - panelW * 0.38;
+  const startY = height / 2 - panelH * 0.26;
 
   for (let i = 0; i < suspects3.length; i++) {
-    const line = questioned3[i]
-      ? `${suspects3[i].name}: ${suspects3[i].boardNote}`
-      : `${suspects3[i].name}: interview not recorded yet.`;
+    fill(255);
+    textSize(18);
+    text(`${suspects3[i].name}`, startX, startY + i * 78);
 
-    text(line, width / 2, startY + i * 50);
+    fill(UI_COLORS.mutedInk[0], UI_COLORS.mutedInk[1], UI_COLORS.mutedInk[2]);
+    textSize(17);
+    const line = questioned3[i]
+      ? suspects3[i].boardNote
+      : "Interview not recorded yet.";
+    text(line, startX + 120, startY + i * 78, panelW * 0.58, 58);
   }
 
-  textSize(min(width, height) * 0.018);
-  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.38);
+  fill(UI_COLORS.mutedInk[0], UI_COLORS.mutedInk[1], UI_COLORS.mutedInk[2]);
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  text("Click anywhere to close.", width / 2, height / 2 + panelH * 0.4);
   pop();
 }
 
@@ -445,10 +421,9 @@ function level3MousePressed() {
       return;
     }
 
-    const positions = getLineupPositions(suspects3.length);
-
     for (let i = 0; i < suspects3.length; i++) {
-      if (isMouseOverLevel3Suspect(positions[i].x, positions[i].y, 100, 160)) {
+      const hb = suspects3[i].hitbox;
+      if (isMouseOverLevel3Suspect(hb.x, hb.y, hb.w, hb.h)) {
         if (convictMode3) {
           finishCase(
             suspects3[i].isCulprit,

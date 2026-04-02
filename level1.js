@@ -1,7 +1,5 @@
 // --------------------------------------------------
 // Level 1 - Visual clue case
-// Uses one image sheet with 3 suspect portraits
-// Left = calm, middle = nervous, right = angry
 // --------------------------------------------------
 
 let suspects1 = [
@@ -43,8 +41,8 @@ let convictMode1 = false;
 
 function getLevel1Buttons() {
   return {
-    begin: { x: width / 2, y: height * 0.74, w: 220, h: 52 },
-    convict: { x: width / 2, y: height * 0.84, w: 220, h: 50 },
+    begin: { x: width / 2, y: height * 0.82, w: 220, h: 52 },
+    convict: { x: width / 2, y: height * 0.9, w: 220, h: 40 },
     back: { x: width * 0.14, y: height * 0.12, w: 120, h: 46 },
     magnify: { x: width / 2, y: height * 0.82, w: 220, h: 50 },
   };
@@ -54,7 +52,6 @@ function formatEmotionLabel(emotion) {
   return emotion.charAt(0).toUpperCase() + emotion.slice(1);
 }
 
-// Check if mouse is over a suspect portrait
 function isMouseOverLevel1Suspect(x, y, w, h) {
   return (
     mouseX > x - w / 2 &&
@@ -64,55 +61,34 @@ function isMouseOverLevel1Suspect(x, y, w, h) {
   );
 }
 
-// Draw one suspect portrait by cropping 1/3 of the image sheet
-function drawLevel1Portrait(x, y, suspect, drawW, drawH) {
+function drawLevel1Portrait(x, y, index, drawW, drawH) {
   const hovered = isMouseOverLevel1Suspect(x, y, drawW, drawH);
+  const scale = hovered ? 1.04 : 1;
+
+  drawPortraitFrame(
+    x,
+    y,
+    drawW * scale,
+    drawH * 0.97 * scale,
+    hovered,
+    convictMode1,
+  );
 
   push();
   imageMode(CENTER);
-  rectMode(CENTER);
-
-  // border
-  noFill();
-  strokeWeight(4);
-
-  if (convictMode1) {
-    stroke(255, 110, 110);
-  } else if (hovered) {
-    stroke(120, 210, 255);
+  if (suspectImgs1[index]) {
+    image(suspectImgs1[index], x, y, drawW * scale, drawH * scale);
   } else {
-    stroke(255);
-  }
-
-  rect(x, y, drawW + 12, drawH + 12, 14);
-
-  // draw cropped part of the image sheet
-  if (level1Sprite && level1Sprite.width > 0) {
-    const srcW = level1Sprite.width / 3;
-    const srcH = level1Sprite.height;
-    const sx = suspect.spriteIndex * srcW;
-    const sy = 0;
-
-    image(level1Sprite, x, y, drawW, drawH, sx, sy, srcW, srcH);
-  } else {
-    // fallback
-    fill(160);
     noStroke();
-    rect(x, y, drawW, drawH, 12);
+    fill(190);
+    rectMode(CENTER);
+    rect(x, y, drawW, drawH, 14);
   }
-
-  // name
-  fill(255);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  textSize(max(14, drawW * 0.12));
-  text(suspect.name, x, y + drawH * 0.62);
-
   pop();
 }
 
 function drawLevel1() {
-  background(70, 78, 96);
+  drawScreenBackdrop(level1BG, [7, 12, 24], [19, 30, 47], 175);
 
   if (level1Stage === "intro") {
     drawLevel1Intro();
@@ -122,7 +98,7 @@ function drawLevel1() {
     drawLevel1Inspect();
   }
 
-  drawFooterMessage(message1);
+  drawFooterMessage(message1, convictMode1 ? "warning" : "info");
 }
 
 function drawLevel1Intro() {
@@ -143,88 +119,88 @@ function drawLevel1Intro() {
 function drawLevel1Lineup() {
   const buttons = getLevel1Buttons();
   const positions = getLineupPositions(suspects1.length);
+  const imgW = min(width * 0.15, 180);
+  const imgH = min(height * 0.48, 420);
 
   drawCaseHeader(
     "Level 1: Bank Robbery",
     convictMode1
-      ? "Convict mode: click the robber."
-      : "Inspect the suspect portraits and study their expressions.",
+      ? "Convict mode is active. Select the robber."
+      : "Study body language first, then inspect a suspect.",
+  );
+
+  drawLineupFloor();
+  drawInfoPill(
+    "Visual clue case",
+    width / 2,
+    height * 0.2,
+    190,
+    UI_COLORS.warning,
   );
 
   for (let i = 0; i < suspects1.length; i++) {
-    drawLevel1Portrait(positions[i].x, positions[i].y, suspects1[i], 200, 500);
+    drawLevel1Portrait(positions[i].x, positions[i].y, i, imgW, imgH);
+
+    suspects1[i].hitbox = {
+      x: positions[i].x,
+      y: positions[i].y,
+      w: imgW,
+      h: imgH,
+    };
+
+    drawSuspectNameTag(
+      positions[i].x,
+      positions[i].y + imgH * 0.58,
+      suspects1[i].name,
+      false,
+    );
   }
 
-  drawButton(buttons.convict, convictMode1 ? "Cancel" : "Convict");
+  drawButton(
+    buttons.convict,
+    convictMode1 ? "Cancel Convict" : "Convict",
+    convictMode1 ? UI_COLORS.danger : UI_COLORS.accentStrong,
+  );
 }
 
 function drawLevel1Inspect() {
   const buttons = getLevel1Buttons();
   const suspect = suspects1[selected1];
 
-  drawCaseHeader(
+  drawInspectLayout(
     "Inspecting " + suspect.name,
-    "Use the portrait and the magnified clue together.",
+    "Use the face and magnified clue together.",
+    (x, y, w, h) => {
+      if (suspectFaces1[selected1]) {
+        image(suspectFaces1[selected1], x, y, w, h);
+      } else {
+        noStroke();
+        fill(190);
+        rectMode(CENTER);
+        rect(x, y, w, h, 14);
+      }
+    },
+    [
+      {
+        label: "Observed emotion",
+        value: formatEmotionLabel(suspect.emotion),
+      },
+      {
+        label: "Visual read",
+        value: suspect.expression,
+      },
+      {
+        label: "Magnify",
+        value:
+          magnifyMessage1 || "Use Magnify to inspect the suspect more closely.",
+        h: 90,
+      },
+    ],
+    UI_COLORS.warning,
   );
 
-  push();
-  imageMode(CENTER);
-  rectMode(CENTER);
-
-  // large frame
-  noFill();
-  stroke(255);
-  strokeWeight(4);
-  rect(width / 2, height * 0.34, 250, 280, 16);
-
-  // large cropped image
-  if (level1Sprite && level1Sprite.width > 0) {
-    const srcW = level1Sprite.width / 3;
-    const srcH = level1Sprite.height;
-    const sx = suspect.spriteIndex * srcW;
-    const sy = 0;
-
-    image(level1Sprite, width / 2, height * 0.34, 230, 260, sx, sy, srcW, srcH);
-  } else {
-    fill(210);
-    noStroke();
-    rect(width / 2, height * 0.34, 230, 260, 12);
-  }
-
-  fill(255);
-  noStroke();
-  textAlign(CENTER, CENTER);
-
-  textSize(min(width, height) * 0.024);
-  text(
-    "Observed emotion: " + formatEmotionLabel(suspect.emotion),
-    width / 2,
-    height * 0.6,
-  );
-
-  textSize(min(width, height) * 0.022);
-  text(
-    suspect.expression,
-    width / 2 - width * 0.25,
-    height * 0.66,
-    width * 0.5,
-    50,
-  );
-
-  if (magnifyMessage1) {
-    text(
-      "Magnify: " + magnifyMessage1,
-      width / 2 - width * 0.3,
-      height * 0.74,
-      width * 0.6,
-      90,
-    );
-  }
-
-  pop();
-
-  drawButton(buttons.back, "Back");
-  drawButton(buttons.magnify, "Magnify");
+  drawButton(buttons.back, "Back", [83, 103, 139]);
+  drawButton(buttons.magnify, "Magnify", UI_COLORS.warning);
 }
 
 function level1MousePressed() {
@@ -246,10 +222,16 @@ function level1MousePressed() {
       return;
     }
 
-    const positions = getLineupPositions(suspects1.length);
-
     for (let i = 0; i < suspects1.length; i++) {
-      if (isMouseOverLevel1Suspect(positions[i].x, positions[i].y, 150, 210)) {
+      let hb = suspects1[i].hitbox;
+
+      let hovered =
+        mouseX > hb.x - hb.w / 2 &&
+        mouseX < hb.x + hb.w / 2 &&
+        mouseY > hb.y - hb.h / 2 &&
+        mouseY < hb.y + hb.h / 2;
+
+      if (hovered) {
         if (convictMode1) {
           finishCase(
             suspects1[i].isCulprit,
@@ -266,6 +248,7 @@ function level1MousePressed() {
           magnifyMessage1 = "";
           message1 = "";
         }
+
         return;
       }
     }
