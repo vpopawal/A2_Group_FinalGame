@@ -42,7 +42,7 @@ let convictMode1 = false;
 function getLevel1Buttons() {
   return {
     begin: { x: width / 2, y: height * 0.82, w: 220, h: 52 },
-    convict: { x: width / 2, y: height * 0.9, w: 220, h: 40 },
+    convict: { x: width / 2, y: height * 0.2, w: 200, h: 40 },
     back: { x: width * 0.14, y: height * 0.12, w: 120, h: 46 },
     magnify: { x: width / 2, y: height * 0.82, w: 220, h: 50 },
   };
@@ -119,8 +119,8 @@ function drawLevel1Intro() {
 function drawLevel1Lineup() {
   const buttons = getLevel1Buttons();
   const positions = getLineupPositions(suspects1.length);
-  const imgW = min(width * 0.15, 180);
-  const imgH = min(height * 0.48, 420);
+  const imgW = min(width * 0.8, 180);
+  const imgH = min(height * 0.55, 420);
 
   drawCaseHeader(
     "Level 1: Bank Robbery",

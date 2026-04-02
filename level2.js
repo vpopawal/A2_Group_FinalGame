@@ -59,14 +59,14 @@ let showBoard2 = false;
 let questioned2 = [false, false, false, false];
 
 function getLevel2Buttons() {
-  const lineupRow = getButtonRow(2, height * 0.92, 170, 50, 28);
+  const topRow = getButtonRow(2, height * 0.2, 170, 45, 20);
   const inspectRow = getButtonRow(2, height * 0.86, 170, 50, 28);
 
   return {
     begin: { x: width / 2, y: height * 0.82, w: 220, h: 52 },
 
-    board: lineupRow[0],
-    convict: lineupRow[1],
+    board: topRow[0],
+    convict: topRow[1],
 
     back: { x: width * 0.12, y: height * 0.12, w: 110, h: 44 },
     magnify: inspectRow[0],
@@ -139,8 +139,8 @@ function drawLevel2Lineup() {
   const buttons = getLevel2Buttons();
   const positions = getLineupPositions(suspects2.length);
   const recordedCount = questioned2.filter(Boolean).length;
-  const imgW = min(width * 0.14, 175);
-  const imgH = min(height * 0.46, 410);
+  const imgW = min(width * 0.8, 180);
+  const imgH = min(height * 0.55, 420);
 
   drawCaseHeader(
     "Level 2: Jewelry Theft",
@@ -153,8 +153,8 @@ function drawLevel2Lineup() {
   drawInfoPill(
     `Statements recorded: ${recordedCount}/${suspects2.length}`,
     width / 2,
-    height * 0.2,
-    260,
+    height * 0.94,
+    310,
     UI_COLORS.warning,
   );
 

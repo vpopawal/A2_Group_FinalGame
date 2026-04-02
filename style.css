@@ -1,10 +1,7 @@
 html,
 body {
   margin: 0;
+  padding: 0;
+  background: #0f1118;
   overflow: hidden;
-  background: #050812;
-}
-
-canvas {
-  display: block;
 }

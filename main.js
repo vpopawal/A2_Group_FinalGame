@@ -2,6 +2,11 @@
 // Main app loop
 // --------------------------------------------------
 
+const GAME_W = 1280;
+const GAME_H = 720;
+
+let gameCanvas;
+
 let currentScreen = "start";
 let level1Sprite = null;
 let level2Sprite = null;
@@ -17,6 +22,9 @@ let suspectFaces3 = [];
 let level2BG;
 let level3BG;
 let level1BG;
+
+let bgMusic;
+let musicStarted = false;
 
 function preload() {
   level1BG = loadImage("assets/images/backgroundimagefixed.png");
@@ -53,17 +61,39 @@ function preload() {
   suspectFaces3[2] = loadImage("assets/images/caseyemotion.png");
   suspectFaces3[3] = loadImage("assets/images/jamieemotion.png");
   suspectFaces3[4] = loadImage("assets/images/emmaemotion.png");
+
+  bgMusic = loadSound("assets/sound/track.wav");
+}
+
+function startBackgroundMusic() {
+  if (!musicStarted && bgMusic) {
+    userStartAudio();
+
+    if (!bgMusic.isPlaying()) {
+      bgMusic.setVolume(0.65);
+      bgMusic.loop();
+    }
+
+    musicStarted = true;
+  }
+}
+
+function centerCanvas() {
+  const x = (windowWidth - GAME_W) / 2;
+  const y = (windowHeight - GAME_H) / 2;
+  gameCanvas.position(x, y);
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  gameCanvas = createCanvas(GAME_W, GAME_H);
   pixelDensity(1);
   textFont("Trebuchet MS");
   textAlign(CENTER, CENTER);
+  centerCanvas();
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  centerCanvas();
 }
 
 function draw() {
@@ -79,7 +109,9 @@ function draw() {
 }
 
 function mousePressed() {
-  if (transitionPending) return;
+  if (!musicStarted) {
+    startBackgroundMusic();
+  }
 
   if (currentScreen === "start") startMousePressed();
   else if (currentScreen === "instructions") instructionsMousePressed();
